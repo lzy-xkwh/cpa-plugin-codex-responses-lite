@@ -1,0 +1,12 @@
+plugins:
+  enabled: true
+  dir: /path/to/cpa/plugins
+  configs:
+    aq-codex-responses-lite:
+      enabled: true
+      priority: 200
+      rules:
+        - provider_prefix: opencode
+          models:
+            - grok-4.5
+            - muse-spark-1.2-contributor

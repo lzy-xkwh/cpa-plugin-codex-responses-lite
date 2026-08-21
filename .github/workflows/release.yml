@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Verify, test, and vet
+        run: |
+          go mod verify
+          go test ./... -count=1
+          go vet ./...
+      - name: Build and package Linux amd64
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          mkdir -p dist/package
+          go build -buildmode=c-shared -trimpath -o dist/package/aq-codex-responses-lite.so .
+          (cd dist/package && zip -j "../aq-codex-responses-lite_${version}_linux_amd64.zip" aq-codex-responses-lite.so)
+          (cd dist && sha256sum "aq-codex-responses-lite_${version}_linux_amd64.zip" > checksums.txt)
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/*.zip dist/checksums.txt --generate-notes --verify-tag

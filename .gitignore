@@ -1,0 +1,8 @@
+.DS_Store
+dist/
+*.so
+*.h
+*.dylib
+*.dll
+*.zip
+checksums.txt
