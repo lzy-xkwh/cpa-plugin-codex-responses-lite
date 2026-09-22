@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [0.1.1] - 2026-09-22
 
 ### Added
 
@@ -18,3 +18,5 @@ All notable changes to this project are documented in this file.
 - Linux amd64 release packaging for the CPA Plugin Store.
 
 [0.1.0]: https://github.com/AstroQore/cpa-plugin-codex-responses-lite/releases/tag/v0.1.0
+
+[0.1.1]: https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/tag/v0.1.1
