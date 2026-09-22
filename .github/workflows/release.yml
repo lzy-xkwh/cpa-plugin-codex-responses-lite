@@ -59,6 +59,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
