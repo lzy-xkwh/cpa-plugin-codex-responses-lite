@@ -11,6 +11,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      PLUGIN_ID: aq-codex-responses-lite
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -22,15 +24,38 @@ jobs:
           go mod verify
           go test ./... -count=1
           go vet ./...
+      - name: Install arm64 cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
       - name: Build and package Linux amd64
         env:
           TAG: ${{ github.ref_name }}
         run: |
           version="${TAG#v}"
           mkdir -p dist/package
-          go build -buildmode=c-shared -trimpath -o dist/package/aq-codex-responses-lite.so .
-          (cd dist/package && zip -j "../aq-codex-responses-lite_${version}_linux_amd64.zip" aq-codex-responses-lite.so)
-          (cd dist && sha256sum "aq-codex-responses-lite_${version}_linux_amd64.zip" > checksums.txt)
+          CGO_ENABLED=1 go build -buildmode=c-shared -trimpath -o dist/package/${PLUGIN_ID}.so .
+          (cd dist/package && zip -j "../${PLUGIN_ID}_${version}_linux_amd64.zip" ${PLUGIN_ID}.so)
+          file dist/package/${PLUGIN_ID}.so | tee dist/arch-amd64.txt
+      - name: Build and package Linux arm64
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          rm -rf dist/package
+          mkdir -p dist/package
+          CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOARCH=arm64 go build -buildmode=c-shared -trimpath -o dist/package/${PLUGIN_ID}.so .
+          (cd dist/package && zip -j "../${PLUGIN_ID}_${version}_linux_arm64.zip" ${PLUGIN_ID}.so)
+          file dist/package/${PLUGIN_ID}.so | tee dist/arch-arm64.txt
+      - name: Verify artifact architectures
+        run: |
+          grep -q "x86-64" dist/arch-amd64.txt
+          grep -q "aarch64" dist/arch-arm64.txt
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum ${PLUGIN_ID}_*.zip > checksums.txt
+          cat checksums.txt
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

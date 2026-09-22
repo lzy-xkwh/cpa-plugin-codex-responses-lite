@@ -44,7 +44,7 @@ Everything after that remains native CPA behavior.
 - CLIProxyAPI with dynamic plugin support. The initial release is tested with CPA `v7.2.127`.
 - A target model already configured on CPA's native Codex/Responses-capable path, normally under `codex-api-key`.
 - Provider prefixes enabled in CPA so clients can request `prefix/model`.
-- Linux amd64 for the prebuilt `v0.1.0` artifact. Other platforms can build from source.
+- Prebuilt Linux amd64 and Linux arm64 artifacts. Other platforms can build from source.
 
 This plugin does **not** register models or move models between provider sections. Configure models and credentials in CPA first, then use this plugin only to select Responses Lite for the desired prefixed model names.
 
@@ -59,6 +59,13 @@ Example for Linux amd64:
 
 ```bash
 unzip aq-codex-responses-lite_0.1.0_linux_amd64.zip
+install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
+```
+
+Example for Linux arm64 (for example Raspberry Pi 64-bit, ARM servers, Apple Silicon VMs):
+
+```bash
+unzip aq-codex-responses-lite_0.1.0_linux_arm64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
 
@@ -111,10 +118,16 @@ make check
 make build
 ```
 
-The library is written to `dist/`. On Linux amd64, maintainers can create the store-compatible release files with:
+The library is written to `dist/`. On a Linux amd64 host, maintainers can create the store-compatible amd64 release files with:
 
 ```bash
 make package VERSION=0.1.0
+```
+
+To package for Linux arm64, install the cross toolchain (`gcc-aarch64-linux-gnu` on Debian/Ubuntu) and set the target architecture:
+
+```bash
+make package VERSION=0.1.0 TARGET_ARCH=arm64
 ```
 
 The release zip contains exactly one root-level dynamic library, as required by the CPA Plugin Store.

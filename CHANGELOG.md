@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Linux arm64 release packaging. Release builds now publish both `linux_amd64` and `linux_arm64` zips, and `make package` supports `TARGET_ARCH=arm64` cross builds.
+
 ## [0.1.0] - 2026-08-21
 
 ### Added

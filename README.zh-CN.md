@@ -44,7 +44,7 @@ X-OpenAI-Internal-Codex-Responses-Lite: true
 - CLIProxyAPI 已支持动态插件；首个版本在 CPA `v7.2.127` 上验证。
 - 目标模型已经配置在 CPA 原生、支持 Codex/Responses 的链路上，通常位于 `codex-api-key` 配置下。
 - CPA 已开启 provider 前缀，客户端会请求 `prefix/model`。
-- `v0.1.0` 预编译包提供 Linux amd64；其他平台可自行从源码构建。
+- 提供 Linux amd64 和 Linux arm64 预编译包；其他平台可自行从源码构建。
 
 本插件**不会**注册模型，也不会把模型从一个 provider 配置搬到另一个 provider 配置。请先在 CPA 中配置好模型和凭据，再用本插件为指定的带前缀模型启用 Responses Lite。
 
@@ -59,6 +59,13 @@ Linux amd64 示例：
 
 ```bash
 unzip aq-codex-responses-lite_0.1.0_linux_amd64.zip
+install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
+```
+
+Linux arm64 示例（如 64 位树莓派、ARM 服务器、Apple Silicon 虚拟机）：
+
+```bash
+unzip aq-codex-responses-lite_0.1.0_linux_arm64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
 
@@ -111,10 +118,16 @@ make check
 make build
 ```
 
-动态库会输出到 `dist/`。维护者可在 Linux amd64 上生成符合官方插件商店规范的发布文件：
+动态库会输出到 `dist/`。维护者可在 Linux amd64 主机上生成符合官方插件商店规范的 amd64 发布文件：
 
 ```bash
 make package VERSION=0.1.0
+```
+
+如需打包 Linux arm64 版本，先安装交叉工具链（Debian/Ubuntu 为 `gcc-aarch64-linux-gnu`），再指定目标架构：
+
+```bash
+make package VERSION=0.1.0 TARGET_ARCH=arm64
 ```
 
 发布 zip 的根目录只包含一个动态库文件，满足 CPA Plugin Store 的要求。
