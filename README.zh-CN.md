@@ -71,6 +71,8 @@ install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 
 ## 配置
 
+安装后可在 **CPA 管理后台 → 插件 → aq-codex-responses-lite → Responses Lite** 打开可视化规则编辑页（向导会要求输入管理密钥，通过管理 API 保存）。也可以直接手改 CPA 的 `config.yaml`：
+
 ```yaml
 plugins:
   enabled: true

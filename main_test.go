@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
@@ -10,8 +11,8 @@ import (
 
 func TestRegistrationAndInterception(t *testing.T) {
 	registered := configurePlugin(t)
-	if !registered.Capabilities.RequestInterceptor {
-		t.Fatal("request interceptor capability was not registered")
+	if !registered.Capabilities["request_interceptor"] || !registered.Capabilities["management_api"] {
+		t.Fatalf("unexpected capabilities: %#v", registered.Capabilities)
 	}
 	if registered.Metadata.Name != pluginID || registered.Metadata.Version != pluginVersion {
 		t.Fatalf("unexpected metadata: %#v", registered.Metadata)
@@ -73,6 +74,54 @@ func intercept(t *testing.T, method string, request pluginapi.RequestInterceptRe
 		t.Fatal(err)
 	}
 	return callAndDecode[pluginapi.RequestInterceptResponse](t, method, raw)
+}
+
+func TestManagementWizard(t *testing.T) {
+	reg := callAndDecode[map[string]any](t, pluginabi.MethodManagementRegister, nil)
+	resources, ok := reg["resources"].([]any)
+	if !ok || len(resources) != 1 {
+		t.Fatalf("unexpected management registration: %#v", reg)
+	}
+	page, ok := resources[0].(map[string]any)
+	if !ok || page["path"] != "/config-wizard" {
+		t.Fatalf("unexpected resource entry: %#v", resources[0])
+	}
+
+	raw, err := json.Marshal(managementRPCRequest{Method: "GET", Path: "/plugins/aq-codex-responses-lite/config-wizard"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wrapped envelope
+	var out []byte
+	out, err = handleMethod(pluginabi.MethodManagementHandle, raw)
+	if err != nil {
+		t.Fatalf("management handle GET error: %v", err)
+	}
+	if err := json.Unmarshal(out, &wrapped); err != nil || !wrapped.OK {
+		t.Fatalf("management handle GET failed: %v %#v", err, wrapped.Error)
+	}
+	var pageResp managementRPCResponse
+	if err := json.Unmarshal(wrapped.Result, &pageResp); err != nil {
+		t.Fatalf("decode management response: %v", err)
+	}
+	if pageResp.StatusCode != 200 || len(pageResp.Body) == 0 {
+		t.Fatalf("unexpected page response: %#v", pageResp)
+	}
+
+	post, err := json.Marshal(managementRPCRequest{Method: "POST"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _ = handleMethod(pluginabi.MethodManagementHandle, post)
+	if err := json.Unmarshal(out, &wrapped); err != nil || !wrapped.OK {
+		t.Fatalf("management handle POST failed: %v %#v", err, wrapped.Error)
+	}
+	if err := json.Unmarshal(wrapped.Result, &pageResp); err != nil {
+		t.Fatalf("decode management response: %v", err)
+	}
+	if pageResp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405 for POST, got %#v", pageResp)
+	}
 }
 
 func callAndDecode[T any](t *testing.T, method string, request []byte) T {

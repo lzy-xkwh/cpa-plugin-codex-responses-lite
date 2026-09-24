@@ -50,7 +50,7 @@ import (
 
 const (
 	pluginID            = "aq-codex-responses-lite"
-	pluginVersion       = "0.1.2"
+	pluginVersion       = "0.2.0"
 	responsesLiteHeader = "X-OpenAI-Internal-Codex-Responses-Lite"
 )
 
@@ -72,13 +72,9 @@ type lifecycleRequest struct {
 }
 
 type registration struct {
-	SchemaVersion uint32                 `json:"schema_version"`
-	Metadata      pluginapi.Metadata     `json:"metadata"`
-	Capabilities  registrationCapability `json:"capabilities"`
-}
-
-type registrationCapability struct {
-	RequestInterceptor bool `json:"request_interceptor"`
+	SchemaVersion uint32             `json:"schema_version"`
+	Metadata      pluginapi.Metadata `json:"metadata"`
+	Capabilities  map[string]bool    `json:"capabilities"`
 }
 
 func init() {
@@ -143,8 +139,67 @@ func handleMethod(method string, request []byte) ([]byte, error) {
 		return okEnvelope(pluginRegistration())
 	case pluginabi.MethodRequestInterceptBefore, pluginabi.MethodRequestInterceptAfter:
 		return handleIntercept(request)
+	case pluginabi.MethodManagementRegister:
+		return okEnvelope(managementRegistration())
+	case pluginabi.MethodManagementHandle:
+		return handleManagement(request)
 	default:
 		return errorEnvelope("unknown_method", "unknown method: "+method), nil
+	}
+}
+
+// managementRegistration declares the admin-UI resource page. The wizard page
+// itself calls the CPA management API from the browser, so no plugin routes
+// are needed.
+func managementRegistration() map[string]any {
+	return map[string]any{
+		"routes": []any{},
+		"resources": []map[string]any{
+			{
+				"path":        "/config-wizard",
+				"menu":        "Responses Lite",
+				"description": "可视化配置 Responses Lite 匹配规则，无需手写 YAML",
+			},
+		},
+	}
+}
+
+type managementRPCRequest struct {
+	Method  string              `json:"method"`
+	Path    string              `json:"path"`
+	Headers map[string][]string `json:"headers"`
+	Query   map[string][]string `json:"query"`
+	Body    []byte              `json:"body"`
+}
+
+type managementRPCResponse struct {
+	StatusCode int                 `json:"StatusCode"`
+	Headers    map[string][]string `json:"Headers"`
+	Body       []byte              `json:"Body"`
+}
+
+func managementResponse(status int, contentType string, body []byte) managementRPCResponse {
+	return managementRPCResponse{
+		StatusCode: status,
+		Headers:    map[string][]string{"Content-Type": {contentType}},
+		Body:       body,
+	}
+}
+
+func handleManagement(request []byte) ([]byte, error) {
+	var req managementRPCRequest
+	if len(request) > 0 {
+		if err := json.Unmarshal(request, &req); err != nil {
+			return okEnvelope(managementResponse(http.StatusBadRequest,
+				"application/json; charset=utf-8", []byte(`{"error":"bad_request"}`)))
+		}
+	}
+	switch req.Method {
+	case http.MethodGet, "":
+		return okEnvelope(managementResponse(http.StatusOK, "text/html; charset=utf-8", []byte(configWizardPage())))
+	default:
+		return okEnvelope(managementResponse(http.StatusMethodNotAllowed, "text/plain; charset=utf-8",
+			[]byte("this resource only supports GET")))
 	}
 }
 
@@ -194,7 +249,10 @@ func pluginRegistration() registration {
 				},
 			},
 		},
-		Capabilities: registrationCapability{RequestInterceptor: true},
+		Capabilities: map[string]bool{
+			"request_interceptor": true,
+			"management_api":      true,
+		},
 	}
 }
 

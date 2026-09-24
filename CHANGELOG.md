@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.0] - 2026-09-24
+
+### Added
+
+- Management-UI config wizard. The plugin registers a `Responses Lite` resource page in the CPA admin panel (`/v0/resource/plugins/aq-codex-responses-lite/config-wizard`) for editing `rules` visually; saves go through the CPA management API (`PUT /v0/management/plugins/aq-codex-responses-lite/config`) with the admin's own key.
+
 ## [0.1.2] - 2026-09-24
 
 ### Changed

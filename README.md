@@ -71,6 +71,8 @@ install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 
 ## Configuration
 
+After installing, open **CPA admin → Plugins → aq-codex-responses-lite → Responses Lite** for a visual rules editor (the wizard asks for the management key and saves through the management API). Alternatively, edit CPA's `config.yaml`:
+
 ```yaml
 plugins:
   enabled: true

@@ -59,10 +59,10 @@ func TestParseConfigRejectsAmbiguousRules(t *testing.T) {
 
 func TestParseConfigAllowsMissingOrEmptyRules(t *testing.T) {
 	for name, raw := range map[string][]byte{
-		"nil":       nil,
-		"blank":     []byte("   \n"),
-		"no rules":  []byte("priority: 200\n"),
-		"empty":     []byte("rules: []\n"),
+		"nil":        nil,
+		"blank":      []byte("   \n"),
+		"no rules":   []byte("priority: 200\n"),
+		"empty":      []byte("rules: []\n"),
 		"null rules": []byte("rules:\n"),
 	} {
 		t.Run(name, func(t *testing.T) {
