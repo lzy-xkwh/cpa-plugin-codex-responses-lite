@@ -42,7 +42,6 @@ rules:
 
 func TestParseConfigRejectsAmbiguousRules(t *testing.T) {
 	tests := map[string]string{
-		"empty":        "rules: []",
 		"no prefix":    "rules:\n  - models: [grok-4.5]",
 		"no models":    "rules:\n  - provider_prefix: opencode",
 		"model prefix": "rules:\n  - provider_prefix: opencode\n    models: [other/grok-4.5]",
@@ -53,6 +52,29 @@ func TestParseConfigRejectsAmbiguousRules(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if _, err := ParseConfig([]byte(raw)); err == nil {
 				t.Fatal("expected error")
+			}
+		})
+	}
+}
+
+func TestParseConfigAllowsMissingOrEmptyRules(t *testing.T) {
+	for name, raw := range map[string][]byte{
+		"nil":       nil,
+		"blank":     []byte("   \n"),
+		"no rules":  []byte("priority: 200\n"),
+		"empty":     []byte("rules: []\n"),
+		"null rules": []byte("rules:\n"),
+	} {
+		t.Run(name, func(t *testing.T) {
+			cfg, err := ParseConfig(raw)
+			if err != nil {
+				t.Fatalf("ParseConfig() error = %v", err)
+			}
+			if cfg.Active() {
+				t.Fatal("expected inactive config")
+			}
+			if cfg.Match("opencode/grok-4.5") {
+				t.Fatal("expected no match without rules")
 			}
 		})
 	}

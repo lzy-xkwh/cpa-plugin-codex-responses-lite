@@ -50,7 +50,7 @@ import (
 
 const (
 	pluginID            = "aq-codex-responses-lite"
-	pluginVersion       = "0.1.0"
+	pluginVersion       = "0.1.2"
 	responsesLiteHeader = "X-OpenAI-Internal-Codex-Responses-Lite"
 )
 

@@ -17,8 +17,8 @@ type Rule struct {
 }
 
 func ParseConfig(raw []byte) (Config, error) {
-	if len(raw) == 0 {
-		return Config{}, fmt.Errorf("plugin config is empty")
+	if len(strings.TrimSpace(string(raw))) == 0 {
+		return Config{}, nil
 	}
 	var cfg Config
 	if err := yaml.Unmarshal(raw, &cfg); err != nil {
@@ -30,10 +30,13 @@ func ParseConfig(raw []byte) (Config, error) {
 	return cfg, nil
 }
 
+// Active reports whether any rule is configured. A plugin loaded without
+// rules is valid but matches nothing.
+func (c Config) Active() bool {
+	return len(c.Rules) > 0
+}
+
 func (c *Config) normalize() error {
-	if len(c.Rules) == 0 {
-		return fmt.Errorf("rules must not be empty")
-	}
 	seenPrefixes := make(map[string]struct{}, len(c.Rules))
 	for i := range c.Rules {
 		rule := &c.Rules[i]

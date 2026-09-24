@@ -37,7 +37,7 @@ Everything after that remains native CPA behavior.
 - Applies both before and after credential selection.
 - No network client, credentials, upstream URL, proxy, retry loop, stream parser, or usage accounting.
 - No request-body rewriting.
-- Fails configuration early for empty, duplicate, or ambiguous rules.
+- Loaded without rules stays inactive (matches nothing) instead of failing; non-empty rules fail fast for missing, duplicate, or ambiguous entries.
 
 ## Requirements
 

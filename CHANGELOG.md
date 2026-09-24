@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.2] - 2026-09-24
+
+### Changed
+
+- Missing or empty `rules` no longer fails plugin reconfiguration. The plugin loads inactive (matches nothing) so store installs work before any rule is configured; non-empty rules still fail fast for missing, duplicate, or ambiguous entries.
+
 ## [0.1.1] - 2026-09-22
 
 ### Added
