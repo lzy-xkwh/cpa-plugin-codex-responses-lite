@@ -8,7 +8,7 @@
       "author": "AstroQore",
       "repository": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite",
       "homepage": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "license": "MIT",
       "tags": [
         "cpa",
@@ -24,14 +24,14 @@
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.2.0/aq-codex-responses-lite_0.2.0_linux_amd64.zip",
-            "sha256": "8372364def827fbd1a3e2da9606b9b0ee893c7af4fd76b1af235819057cada6b"
+            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.3.0/aq-codex-responses-lite_0.3.0_linux_amd64.zip",
+            "sha256": "4f611ca6ee952235d97170449020ae1991bb3f153389171d651cca1c12870f4b"
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.2.0/aq-codex-responses-lite_0.2.0_linux_arm64.zip",
-            "sha256": "c85f056945e75b2ee5566a32cb0015258679694fefc8a0200ea408047523a771"
+            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.3.0/aq-codex-responses-lite_0.3.0_linux_arm64.zip",
+            "sha256": "5b1a374325fb4039679b034b6e9d519fff191a7e7e0116df456207edcd5f284a"
           }
         ]
       }
