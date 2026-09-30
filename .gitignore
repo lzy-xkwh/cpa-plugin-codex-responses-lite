@@ -6,3 +6,5 @@ dist/
 *.dll
 *.zip
 checksums.txt
+__pycache__/
+*.pyc
