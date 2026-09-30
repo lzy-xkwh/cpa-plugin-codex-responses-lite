@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.3.0] - 2026-09-30
+
+### Added
+
+- CPA Plugin Store manifest (`registry.json`, schema v2 with `direct` linux amd64/arm64 artifacts) plus README instructions for installing and updating the plugin from the store.
+- `scripts/update-registry.sh` and `scripts/check-registry.py`, exposed as `make registry VERSION=x.y.z` and `make check-registry`.
+- The release workflow refreshes `registry.json` for every published tag and pushes it to `main`, so store installs follow new releases without a manual copy.
+- CI validates `registry.json`, so a malformed manifest cannot reach the store.
+
+### Changed
+
+- `make package` now requires an explicit `VERSION=` instead of defaulting to `0.1.0`.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added
@@ -32,3 +45,7 @@ All notable changes to this project are documented in this file.
 [0.1.0]: https://github.com/AstroQore/cpa-plugin-codex-responses-lite/releases/tag/v0.1.0
 
 [0.1.1]: https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/tag/v0.1.1
+
+[0.2.0]: https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/tag/v0.2.0
+
+[0.3.0]: https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/tag/v0.3.0

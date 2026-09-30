@@ -58,16 +58,60 @@ X-OpenAI-Internal-Codex-Responses-Lite: true
 Linux amd64 示例：
 
 ```bash
-unzip aq-codex-responses-lite_0.1.0_linux_amd64.zip
+unzip aq-codex-responses-lite_<version>_linux_amd64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
 
 Linux arm64 示例（如 64 位树莓派、ARM 服务器、Apple Silicon 虚拟机）：
 
 ```bash
-unzip aq-codex-responses-lite_0.1.0_linux_arm64.zip
+unzip aq-codex-responses-lite_<version>_linux_arm64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
+
+## 从 CPA 插件商店安装
+
+仓库根目录的 [`registry.json`](registry.json) 是可直接被 CPA 自定义插件商店读取的
+清单：schema v2、`direct` 安装方式，写死了 release zip 的下载地址与 SHA-256。
+CPA 只下载 zip 并校验摘要，不调用 GitHub Releases API，因此不受匿名 API
+速率限制影响。
+
+在 CPA 的 `config.yaml` 里挂上这个商店源：
+
+```yaml
+plugins:
+  enabled: true
+  dir: "/CLIProxyAPI/plugins"
+  store-sources:
+    - "https://raw.githubusercontent.com/lzy-xkwh/cpa-plugin-codex-responses-lite/main/registry.json"
+```
+
+重启 CPA，进入 **管理后台 → 插件商店**，刷新后安装或更新
+`aq-codex-responses-lite`。安装完成后 CPA 会把 `store` 元数据写进该插件的配置，
+插件会忽略它。
+
+要点：
+
+- 商店源指向 `main` 分支的 `registry.json`，每次发布新 tag 后 release 工作流会
+  自动把它更新到最新版本，所以后续升级只需在商店里点更新，不必再手工替换动态库。
+- 清单里的 `direct` 方式不访问 `api.github.com`；如果你还挂了别的走 GitHub API
+  的商店源，再按需为它配置 `store-auth` 令牌。
+- 如果服务器到 `raw.githubusercontent.com` 不稳定，可换 jsDelivr 镜像：
+  `https://cdn.jsdelivr.net/gh/lzy-xkwh/cpa-plugin-codex-responses-lite@main/registry.json`
+  （有数小时缓存，新版本可能延迟可见）。镜像只加速清单，zip 仍从 GitHub 下载。
+- 下载一直失败时可回退手动安装：从 Releases 下载对应架构 zip，解压出
+  `aq-codex-responses-lite.so` 放进插件目录后重启。
+
+### 商店安装/更新失败排查
+
+`POST /v0/management/plugin-store/:id/install` 返回 502 时，响应 body 的 `error`
+字段可区分原因：
+
+| error | 含义 | 处理 |
+| --- | --- | --- |
+| `plugin_store_registry_failed` | CPA 拉取 `registry.json` 失败 | 检查服务器到 `raw.githubusercontent.com` 的连通性，或换 jsDelivr 镜像 |
+| `plugin_manifest_invalid` | 清单校验失败 | 保留完整 message 反馈到仓库 issue；本地可跑 `make check-registry` 定位 |
+| `plugin_install_failed` | 下载 zip、校验 SHA-256 或解压失败 | 重试一次；反复失败时检查到 `objects.githubusercontent.com` 的连通性，或改为手动安装 |
 
 ## 配置
 
@@ -123,16 +167,31 @@ make build
 动态库会输出到 `dist/`。维护者可在 Linux amd64 主机上生成符合官方插件商店规范的 amd64 发布文件：
 
 ```bash
-make package VERSION=0.1.0
+make package VERSION=0.3.0
 ```
 
 如需打包 Linux arm64 版本，先安装交叉工具链（Debian/Ubuntu 为 `gcc-aarch64-linux-gnu`），再指定目标架构：
 
 ```bash
-make package VERSION=0.1.0 TARGET_ARCH=arm64
+make package VERSION=0.3.0 TARGET_ARCH=arm64
 ```
 
 发布 zip 的根目录只包含一个动态库文件，满足 CPA Plugin Store 的要求。
+
+### 维护商店清单
+
+发布新 tag 后，release 工作流会自动把 `registry.json` 指到新版本并提交回 `main`。
+需要在本地复核或补做时：
+
+```bash
+make registry VERSION=0.3.0                        # 读取该 release 的 checksums.txt
+make registry VERSION=0.3.0 ARTIFACTS_DIR=dist     # 或用本地 dist/ 里的 zip 计算摘要
+make check-registry                                # 校验 registry.json 结构
+```
+
+`registry.json` 始终指向**已发布的最新版本**，所以某个 tag 自带的清单可能仍指向上一个
+版本：CPA 只从 `main` 读取该文件，不读 tag。清单字段含义见
+[`scripts/check-registry.py`](scripts/check-registry.py)。
 
 ## 排障
 

@@ -31,6 +31,7 @@ jobs:
           go mod verify
           go test ./... -count=1
           go vet ./...
+          python3 scripts/check-registry.py registry.json
       - name: Build and package
         env:
           TAG: ${{ github.ref_name }}
@@ -76,3 +77,40 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${{ github.ref_name }}" dist/*.zip dist/checksums.txt --generate-notes --verify-tag
+
+  registry:
+    name: Update plugin store manifest
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download packaged release assets
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+      - name: Point registry.json at this release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          scripts/update-registry.sh "$version" --artifacts-dir dist
+      - name: Commit and push registry.json
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          if git diff --quiet -- registry.json; then
+            echo "registry.json already points at v${version}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry.json
+          git commit -m "chore: point plugin store registry at v${version}"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

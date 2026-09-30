@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "plugins": [
+    {
+      "id": "aq-codex-responses-lite",
+      "name": "Codex Responses Lite 规则",
+      "description": "按 provider 前缀与模型精确匹配，为指定模型启用 CPA 原生 Codex Responses Lite 链路，并阻止自动注入的托管 image_generation 工具。",
+      "author": "AstroQore",
+      "repository": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite",
+      "homepage": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite",
+      "version": "0.2.0",
+      "license": "MIT",
+      "tags": [
+        "cpa",
+        "codex",
+        "responses",
+        "openai",
+        "interceptor",
+        "中文"
+      ],
+      "install": {
+        "type": "direct",
+        "artifacts": [
+          {
+            "goos": "linux",
+            "goarch": "amd64",
+            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.2.0/aq-codex-responses-lite_0.2.0_linux_amd64.zip",
+            "sha256": "8372364def827fbd1a3e2da9606b9b0ee893c7af4fd76b1af235819057cada6b"
+          },
+          {
+            "goos": "linux",
+            "goarch": "arm64",
+            "url": "https://github.com/lzy-xkwh/cpa-plugin-codex-responses-lite/releases/download/v0.2.0/aq-codex-responses-lite_0.2.0_linux_arm64.zip",
+            "sha256": "c85f056945e75b2ee5566a32cb0015258679694fefc8a0200ea408047523a771"
+          }
+        ]
+      }
+    }
+  ]
+}

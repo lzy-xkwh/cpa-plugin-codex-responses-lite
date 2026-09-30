@@ -58,16 +58,62 @@ This plugin does **not** register models or move models between provider section
 Example for Linux amd64:
 
 ```bash
-unzip aq-codex-responses-lite_0.1.0_linux_amd64.zip
+unzip aq-codex-responses-lite_<version>_linux_amd64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
 
 Example for Linux arm64 (for example Raspberry Pi 64-bit, ARM servers, Apple Silicon VMs):
 
 ```bash
-unzip aq-codex-responses-lite_0.1.0_linux_arm64.zip
+unzip aq-codex-responses-lite_<version>_linux_arm64.zip
 install -m 0755 aq-codex-responses-lite.so /path/to/cpa/plugins/
 ```
+
+## Install from the CPA Plugin Store
+
+[`registry.json`](registry.json) at the repository root is a manifest the CPA custom
+plugin store can read directly: schema v2 with `direct` artifacts, pinning each
+release zip URL and its SHA-256. CPA downloads the zip and verifies the digest
+without calling the GitHub Releases API, so anonymous API rate limits do not apply.
+
+Point CPA at this store source in `config.yaml`:
+
+```yaml
+plugins:
+  enabled: true
+  dir: "/CLIProxyAPI/plugins"
+  store-sources:
+    - "https://raw.githubusercontent.com/lzy-xkwh/cpa-plugin-codex-responses-lite/main/registry.json"
+```
+
+Restart CPA, open **admin → Plugin Store**, refresh, then install or update
+`aq-codex-responses-lite`. CPA writes a `store` metadata block into the plugin
+configuration afterwards; the plugin ignores it.
+
+Notes:
+
+- The store source points at `registry.json` on `main`. After every version tag the
+  release workflow updates that file, so later upgrades are a click in the store
+  instead of copying a dynamic library again.
+- The `direct` install type never touches `api.github.com`; only add `store-auth`
+  if you also mount a store source that resolves assets through the GitHub API.
+- If the server cannot reach `raw.githubusercontent.com` reliably, use the jsDelivr
+  mirror `https://cdn.jsdelivr.net/gh/lzy-xkwh/cpa-plugin-codex-responses-lite@main/registry.json`
+  (it caches for hours, so a fresh release may take a while to appear). The mirror
+  only serves the manifest; the zip still comes from GitHub.
+- If downloads keep failing, install manually: unzip the release asset for your
+  architecture, drop `aq-codex-responses-lite.so` into the plugin directory, restart.
+
+### Troubleshooting store installs
+
+`POST /v0/management/plugin-store/:id/install` answers 502 with a machine-readable
+`error` field:
+
+| error | Meaning | What to do |
+| --- | --- | --- |
+| `plugin_store_registry_failed` | CPA could not fetch `registry.json` | Check connectivity to `raw.githubusercontent.com`, or switch to the jsDelivr mirror |
+| `plugin_manifest_invalid` | The manifest failed validation | Keep the full message and open an issue; run `make check-registry` locally to locate it |
+| `plugin_install_failed` | Zip download, SHA-256 check, or extraction failed | Retry once; if it persists check `objects.githubusercontent.com`, or install manually |
 
 ## Configuration
 
@@ -123,16 +169,33 @@ make build
 The library is written to `dist/`. On a Linux amd64 host, maintainers can create the store-compatible amd64 release files with:
 
 ```bash
-make package VERSION=0.1.0
+make package VERSION=0.3.0
 ```
 
 To package for Linux arm64, install the cross toolchain (`gcc-aarch64-linux-gnu` on Debian/Ubuntu) and set the target architecture:
 
 ```bash
-make package VERSION=0.1.0 TARGET_ARCH=arm64
+make package VERSION=0.3.0 TARGET_ARCH=arm64
 ```
 
 The release zip contains exactly one root-level dynamic library, as required by the CPA Plugin Store.
+
+### Maintaining the store manifest
+
+After a version tag is pushed, the release workflow points `registry.json` at the new
+release and commits it back to `main`. To do the same locally, or to redo it after a
+failed workflow run:
+
+```bash
+make registry VERSION=0.3.0                        # digests from that release's checksums.txt
+make registry VERSION=0.3.0 ARTIFACTS_DIR=dist     # or compute digests from local zips
+make check-registry                                # validate registry.json
+```
+
+`registry.json` always points at the newest *published* release, so the file inside a
+given tag may still reference the previous version: CPA reads the manifest from
+`main`, never from a tag. The field rules live in
+[`scripts/check-registry.py`](scripts/check-registry.py).
 
 ## Troubleshooting
 

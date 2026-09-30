@@ -1,5 +1,6 @@
 PLUGIN_ID := aq-codex-responses-lite
-VERSION ?= 0.1.0
+# Release version, always passed explicitly: "make package VERSION=0.3.0".
+VERSION ?=
 GOOS_NAME := $(shell go env GOOS)
 GOARCH_NAME := $(shell go env GOARCH)
 
@@ -30,7 +31,7 @@ endif
 LIBRARY := dist/$(PLUGIN_ID).$(LIB_EXT)
 RELEASE_ZIP := dist/$(PLUGIN_ID)_$(VERSION)_linux_$(TARGET_ARCH).zip
 
-.PHONY: test vet check build package clean
+.PHONY: test vet check check-registry build package registry clean
 
 test:
 	go test ./... -count=1
@@ -40,15 +41,27 @@ vet:
 
 check: test vet
 
+# Validates the CPA Plugin Store manifest (registry.json) structure.
+check-registry:
+	python3 scripts/check-registry.py registry.json
+
 build:
 	mkdir -p dist
 	$(BUILD_ENV) go build -buildmode=c-shared -trimpath -o $(LIBRARY) .
 
 package: check
+	@test -n "$(VERSION)" || (echo "VERSION is required, e.g. make package VERSION=0.3.0" >&2; exit 1)
 	@test "$(GOOS_NAME)" = "linux" || (echo "package must run on Linux" >&2; exit 1)
 	$(MAKE) build BUILD_ENV="$(PACKAGE_ENV)"
 	cd dist && zip -j "$(notdir $(RELEASE_ZIP))" "$(PLUGIN_ID).so"
 	cd dist && sha256sum "$(notdir $(RELEASE_ZIP))" > checksums.txt
+
+# Points registry.json at a published release. Digests are read from that
+# release's checksums.txt, or computed from local zips via ARTIFACTS_DIR.
+# The release workflow runs this automatically after publishing.
+registry:
+	@test -n "$(VERSION)" || (echo "VERSION is required, e.g. make registry VERSION=0.3.0" >&2; exit 1)
+	scripts/update-registry.sh "$(VERSION)" $(if $(ARTIFACTS_DIR),--artifacts-dir "$(ARTIFACTS_DIR)")
 
 clean:
 	rm -rf dist
